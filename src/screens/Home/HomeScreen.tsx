@@ -67,26 +67,14 @@ const HomeScreen = ({ navigation }: any) => {
     );
   };
 
-  const getPaginatedData = () => {
-    const startIndex = currentPage * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return user.mascotas.slice(startIndex, endIndex);
-  };
+
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
         Mascotas de {user.nombre} {user.apellidos}
       </Text>
-      <View style={styles.listContainer}>
-        <FlatList
-          data={getPaginatedData()}
-          renderItem={renderMascotaCard}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-        />
-      </View>
-      {renderPaginator()}
+      
       <Text style={styles.sectionTitle}>Citas</Text>
       {/* Aquí iría tu sección de citas */}
     </View>

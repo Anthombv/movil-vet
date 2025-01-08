@@ -1,25 +1,140 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
+  TextInput,
   Button,
   StyleSheet,
-  FlatList,
-  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import {useAuth} from '../../context/AuthContext';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const PerfilScreen = ({navigation}: any) => {
-  const {logout} = useAuth();
   const {user} = useAuth();
+  const [cliente, setCliente] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [formData, setFormData] = useState<any>({});
+
+  useEffect(() => {
+    fetchCliente();
+  }, []);
+
+  const fetchCliente = () => {
+    setLoading(true);
+    fetch(`https://site-back-web-vet.vercel.app/api/client/${user.id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(
+            `Error al obtener datos del cliente: ${response.status}`,
+          );
+        }
+        return response.json();
+      })
+      .then(result => {
+        const data = result.data;
+        setCliente(data);
+        setFormData(data); // Inicializa los datos del formulario con los datos actuales
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error al obtener los datos del cliente:', error);
+        setLoading(false);
+      });
+  };
+
+  const handleSave = () => {
+    setLoading(true);
+    fetch(`https://site-back-web-vet.vercel.app/api/client`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(
+            `Error al actualizar los datos del cliente: ${response.status}`,
+          );
+        }
+        return response.json();
+      })
+      .then(result => {
+        console.log('Perfil editado exitosamente:', result);
+        fetchCliente();
+        setEditing(false);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error al actualizar los datos del cliente:', error);
+        setLoading(false);
+      });
+  };
+
+  const handleChange = (key: string, value: string) => {
+    setFormData({...formData, [key]: value});
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.title}>Cargando datos...</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>
-        Perfil de {user.nombre} {user.apellidos}
+        Perfil de {cliente?.nombre} {cliente?.apellidos}
       </Text>
-    </View>
+
+      {editing ? (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre"
+            value={formData.nombre}
+            onChangeText={value => handleChange('nombre', value)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Apellidos"
+            value={formData.apellidos}
+            onChangeText={value => handleChange('apellidos', value)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Correo"
+            value={formData.correo}
+            onChangeText={value => handleChange('correo', value)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Teléfono"
+            value={formData.telefono}
+            onChangeText={value => handleChange('telefono', value)}
+          />
+          <Button title="Guardar Cambios" onPress={handleSave} />
+        </>
+      ) : (
+        <>
+          <Text style={styles.detail}>Nombre: {cliente?.nombre}</Text>
+          <Text style={styles.detail}>Apellidos: {cliente?.apellidos}</Text>
+          <Text style={styles.detail}>Correo: {cliente?.correo}</Text>
+          <Text style={styles.detail}>Teléfono: {cliente?.telefono}</Text>
+          <Button title="Editar Perfil" onPress={() => setEditing(true)} />
+        </>
+      )}
+    </ScrollView>
   );
 };
 
@@ -35,39 +150,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  list: {
-    paddingBottom: 16,
-  },
-  card: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 16,
-    borderRadius: 8,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  detail: {
+    fontSize: 16,
     marginBottom: 8,
   },
-  cardDetail: {
-    fontSize: 14,
-    marginBottom: 4,
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 16,
   },
-  cardActions: {
-    flexDirection: 'row',
-  },
-  iconButton: {
-    marginLeft: 16,
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
+
 export default PerfilScreen;

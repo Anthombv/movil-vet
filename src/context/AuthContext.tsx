@@ -4,6 +4,7 @@ interface AuthContextProps {
   user: any;
   login: (user: any) => void;
   logout: () => void;
+  setUser: (user: any) => void; // Permite actualizar directamente el estado del usuario
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -15,7 +16,7 @@ export const AuthProvider = ({children}: any) => {
   const logout = () => setUser(null);
 
   return (
-    <AuthContext.Provider value={{user, login, logout}}>
+    <AuthContext.Provider value={{user, login, logout, setUser}}>
       {children}
     </AuthContext.Provider>
   );
